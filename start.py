@@ -13,6 +13,7 @@ if not discord.opus.is_loaded():
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.standby_time = 0
 
     @commands.command()
     async def join(self, ctx: commands.Context, *, channel: discord.VoiceChannel):
@@ -28,6 +29,8 @@ class Music(commands.Cog):
                 await asyncio.sleep(1)
 
             if queueList.is_empty() is False:       # 判断队列中是否有未播放的歌曲
+                # 有，则计数清零
+                self.standby_time = 0
                 musicInfo = queueList.dequeue()
                 embed = discord.Embed(title=musicInfo["musicTitle"],
                                       url=musicInfo["163Url"],
@@ -37,8 +40,17 @@ class Music(commands.Cog):
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(musicInfo["musicFileName"]), volume=0.6)
                 ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
             else:
-                await ctx.send("Nothing to play.")
-                break
+                # 无，且计数到达阈值
+                if self.standby_time >= 60:
+                    # 计数清零，退出
+                    self.standby_time = 0
+                    await ctx.send("Nothing to play.")
+                    return
+                else:
+                    # 未达到阈值，计数增加
+                    self.standby_time += 1
+                    await asyncio.sleep(1)
+
 
     @commands.command()
     async def add(self, ctx: commands.Context, music_name: str):
