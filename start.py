@@ -1,11 +1,13 @@
 import discord
 import asyncio
+import logging
 from discord.ext import commands
 import neteaselib
 
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 bot = commands.Bot(command_prefix='$')
 queueList = neteaselib.Queue()
-bot.commands.remove("help")
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')
 
@@ -44,13 +46,13 @@ class Music(commands.Cog):
                 if self.standby_time >= 60:
                     # 计数清零，退出
                     self.standby_time = 0
+                    await ctx.voice_client.disconnect()
                     await ctx.send("Nothing to play.")
                     return
                 else:
                     # 未达到阈值，计数增加
                     self.standby_time += 1
                     await asyncio.sleep(1)
-
 
     @commands.command()
     async def add(self, ctx: commands.Context, music_name: str):
