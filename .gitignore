@@ -1,0 +1,10 @@
+/venv/
+/tmp/
+.idea
+*.dll
+*.exe
+.vs
+/env/
+*.sln
+*.pyproj
+/__pycache__/
