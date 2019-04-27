@@ -18,7 +18,6 @@ config.read("config.ini", encoding="UTF-8")
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.standby_time = 0
 
     @commands.command()
     async def join(self, ctx: commands.Context, *, channel: discord.VoiceChannel):
@@ -28,14 +27,17 @@ class Music(commands.Cog):
 
     @commands.command()
     async def play(self, ctx: commands.Context):
-        while True:
-            # 等待播放完毕
-            while ctx.voice_client.is_playing():        # 如歌曲正在播放，等待播放结束
-                await asyncio.sleep(1)
+        # 已在播放，忽略相同命令
+        if ctx.voice_client.is_playing():
+            return
 
-            if queueList.is_empty() is False:       # 判断队列中是否有未播放的歌曲
+        retry_count = 0
+        while True:
+            # 判断队列中是否有未播放的歌曲
+            if queueList.is_empty() is False:
                 # 有，则计数清零
-                self.standby_time = 0
+                retry_count = 0
+                # 并且开始播放
                 musicInfo = queueList.dequeue()
                 embed = discord.Embed(title=musicInfo["musicTitle"],
                                       url=musicInfo["163Url"],
@@ -45,16 +47,16 @@ class Music(commands.Cog):
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(musicInfo["musicFileName"]), volume=0.6)
                 ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
             else:
-                # 无，且计数到达阈值
-                if self.standby_time >= 60:
+                # 无，且计数达到阈值
+                if retry_count >= 60:
                     # 计数清零，退出
-                    self.standby_time = 0
+                    retry_count = 0
                     await ctx.voice_client.disconnect()
                     await ctx.send("Nothing to play.")
                     return
                 else:
                     # 未达到阈值，计数增加
-                    self.standby_time += 1
+                    retry_count += 1
                     await asyncio.sleep(1)
 
     @commands.command()
