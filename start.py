@@ -23,21 +23,22 @@ class Music(commands.Cog):
     @commands.command()
     async def play(self, ctx: commands.Context):
         while True:
+            # 等待播放完毕
             while ctx.voice_client.is_playing():        # 如歌曲正在播放，等待播放结束
                 await asyncio.sleep(1)
+
+            if queueList.is_empty() is False:       # 判断队列中是否有未播放的歌曲
+                musicInfo = queueList.dequeue()
+                embed = discord.Embed(title=musicInfo["musicTitle"],
+                                      url=musicInfo["163Url"],
+                                      description="Xiaoxi654's Bot | Rewrite Version")\
+                    .set_thumbnail(url=musicInfo["musicPic"])
+                await ctx.send(embed=embed)
+                source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(musicInfo["musicFileName"]), volume=0.6)
+                ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
             else:
-                if queueList.is_empty() is False:       # 判断队列中是否有未播放的歌曲
-                    musicInfo = queueList.dequeue()
-                    embed = discord.Embed(title=musicInfo["musicTitle"],
-                                          url=musicInfo["163Url"],
-                                          description="Xiaoxi654's Bot | Rewrite Version")\
-                        .set_thumbnail(url=musicInfo["musicPic"])
-                    await ctx.send(embed=embed)
-                    source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(musicInfo["musicFileName"]), volume=0.6)
-                    ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
-                else:
-                    await ctx.send("Nothing to play.")
-                    break
+                await ctx.send("Nothing to play.")
+                break
 
     @commands.command()
     async def add(self, ctx: commands.Context, music_name: str):
