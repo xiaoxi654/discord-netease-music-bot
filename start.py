@@ -1,6 +1,7 @@
 import discord
 import asyncio
 import logging
+from configparser import ConfigParser
 from discord.ext import commands
 import neteaselib
 
@@ -10,6 +11,8 @@ bot = commands.Bot(command_prefix='$')
 queueList = neteaselib.Queue()
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')
+config = ConfigParser()
+config.read("config.ini", encoding="UTF-8")
 
 
 class Music(commands.Cog):
@@ -82,7 +85,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def cleancache(self, ctx: commands.Context):
-        if str(ctx.message.author) == "xiaoxi654#6100":
+        if str(ctx.message.author) == config.get("config", "username"):
             await ctx.send("Command sent by `%s`, cleaning cache." % ctx.message.author)
             neteaselib.clean_cache()
         else:
@@ -90,7 +93,7 @@ class Music(commands.Cog):
 
     @commands.command()
     async def logout(self, ctx: commands.Context):
-        if str(ctx.message.author) == "xiaoxi654#6100":
+        if str(ctx.message.author) == config.get("config", "username"):
             await ctx.send("Command sent by `%s`, logging out." % ctx.message.author)
             await discord.Client.logout(bot)
         else:
@@ -114,4 +117,4 @@ async def on_ready():
 
 
 bot.add_cog(Music(bot))
-bot.run("TOKEN")
+bot.run(config.get("config", "token"))
