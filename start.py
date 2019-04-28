@@ -35,6 +35,10 @@ class Music(commands.Cog):
 
         retry_count = 0
         while True:
+            # 等待播放结束
+            while ctx.voice_client.is_playing():
+                await asyncio.sleep(1)
+
             # 判断队列中是否有未播放的歌曲
             if queueList.is_empty() is False:
                 # 有，则计数清零
@@ -51,8 +55,7 @@ class Music(commands.Cog):
             else:
                 # 无，且计数达到阈值
                 if retry_count >= 60:
-                    # 计数清零，退出
-                    retry_count = 0
+                    # 退出
                     await ctx.voice_client.disconnect()
                     await ctx.send("Nothing to play.")
                     return
