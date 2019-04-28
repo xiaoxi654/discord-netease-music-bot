@@ -2,6 +2,7 @@ import os
 import shutil
 import stat
 import requests
+from mutagen.mp3 import MP3
 
 
 def get_music_info(music_id: str):
@@ -11,13 +12,20 @@ def get_music_info(music_id: str):
     musicUrl = musicResult['data'][0]['url']
     musicTitle = searchResult['result']['songs'][0]['name']
     musicPic = searchResult['result']['songs'][0]['al']['picUrl']
-    music_info = {"163Url": "https://music.163.com/#/song?id=" + musicId,
-                  "musicId": musicId,
-                  "musicUrl": musicUrl,
-                  "musicTitle": musicTitle,
-                  "musicPic": musicPic,
-                  "musicFileName": download_music(musicId, musicUrl)
-                  }
+    musicArResult = '/'.join([m["name"] for m in searchResult["result"]["songs"][0]["ar"]])
+    musicFileName = download_music(musicId, musicUrl)
+    musicLengthSecond = int(round(MP3(musicFileName).info.length))
+    lengthMinute, lengthSecond = divmod(musicLengthSecond, 60)
+    music_info = {
+        "163Url": "https://music.163.com/#/song?id=" + musicId,
+        "musicId": musicId,
+        "musicUrl": musicUrl,
+        "musicTitle": musicTitle,
+        "musicArResult": musicArResult,
+        "musicPic": musicPic,
+        "musicFileName": musicFileName,
+        "musicLength": ("%02d:%02d" % (lengthMinute, lengthSecond))
+        }
     return music_info
 
 

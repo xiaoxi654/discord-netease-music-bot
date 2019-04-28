@@ -1,6 +1,7 @@
 import discord
 import asyncio
 import logging
+import time
 from configparser import ConfigParser
 from discord.ext import commands
 import neteaselib
@@ -8,6 +9,7 @@ import neteaselib
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 bot = commands.Bot(command_prefix='$')
+bot.remove_command("help")
 queueList = neteaselib.Queue()
 if not discord.opus.is_loaded():
     discord.opus.load_opus('opus')
@@ -37,9 +39,9 @@ class Music(commands.Cog):
                 # 有，则计数清零
                 self.standby_time = 0
                 musicInfo = queueList.dequeue()
-                embed = discord.Embed(title=musicInfo["musicTitle"],
-                                      url=musicInfo["163Url"],
-                                      description="Xiaoxi654's Bot | Rewrite Version")\
+                embed = discord.Embed(title="Now Playing: " + musicInfo["musicArResult"] + " - " + musicInfo["musicTitle"])\
+                    .add_field(name="Link", value="[Click Here](%s)" % musicInfo["163Url"], inline=False)\
+                    .set_footer(text="Length: " + str(musicInfo["musicLength"] + " • " + time.asctime(time.localtime(time.time()))))\
                     .set_thumbnail(url=musicInfo["musicPic"])
                 await ctx.send(embed=embed)
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(musicInfo["musicFileName"]), volume=0.6)
